@@ -1,4 +1,4 @@
-# Yet another semantic verionning library (YASVL)
+# Yet another [semantic versioning](https://semver.org/) library (YASVL)
 
 Yasvl is a C++20 library to handle versions:
 ```cpp
@@ -12,7 +12,7 @@ int main() {
 ```
 Possible output:
 ```
-The compiler version(v11.0.0) is over v1.0.0: true
+The compiler version(v11.0.0) is greater than v1.0.0: true
 ```
 Here is a resume of the api
 ```cpp
