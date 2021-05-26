@@ -16,6 +16,11 @@ The compiler version(v11.0.0) is over v1.0.0: true
 ```
 Here is a resume of the api
 ```cpp
+// constant versions
+yasvl::compiler_version;
+yasvl::cpp_version;
+yasvl::yasvl_version;
+
 yasvl::version ver{ 1, 0 }; // agregate (in the order depicted below)
 ver.major; // the major version
 ver.minor; // the minor version
