@@ -1,2 +1,1 @@
-# YASVL
-Yet another semantic verionning library written in modern C++20.
+#Yet another semantic verionning library (YASVL)
