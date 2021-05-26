@@ -5,8 +5,8 @@ Yasvl is a C++20 library to handle versions:
 #include "version.hpp"
 
 int main() {
-	version::version aVersion{ 1, 0 };
-	std::cout << "The compiler version(" << version::compiler_version << ") is over v1.0: " 
-	          << std::boolalpha << (ver < version::compiler_version) << '\n';
+	yasvl::version aVersion{ 1, 0 };
+	std::cout << "The compiler version(" << yasvl::compiler_version << ") is over v1.0: " 
+	          << std::boolalpha << (ver < yasvl::compiler_version) << '\n';
 }
 ```
