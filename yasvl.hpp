@@ -1,4 +1,8 @@
 #pragma once
+// For the liscence see at the end of this document.
+static_assert(__has_include(<format>) || __has_include("fmt/format.h"),
+	R"(To use yasvl you need either "fmt/format.h" or <format> stdlib support.)");
+
 #include <format>
 #include <cstdint>
 #include <compare>
@@ -7,7 +11,17 @@
 #include <iterator>
 #include <ostream>
 
-namespace version {
+namespace yasvl {
+	namespace detail {
+		#if __has_include(<format>)
+			#include <format>
+			using namespace std;
+		#elif __has_include("fmt/format.h")
+			#include "fmt/format.h"
+			using namespace fmt;
+		#endif
+	}
+
 	enum class pre_release /*implementation defined underlying type*/ : std::uint_fast8_t { alpha, beta, rc, none };
 	struct version {
 		template<typename T1, typename T2> 
@@ -27,7 +41,7 @@ namespace version {
 		constexpr bool operator==(const version&) const noexcept = default;
 		/*constexpr*/ static version from_string(const std::string_view& str) noexcept {}
 		constexpr void format_to(std::output_iterator<const char&> auto out) const noexcept {
-			std::format_to(out, "v{}.{}.{}", major, minor, patch);
+			detail::format_to(out, "v{}.{}.{}", major, minor, patch);
 			if (pre_release_type != pre_release::none) {
 				switch (pre_release_type) {
 				case pre_release::alpha:
@@ -48,17 +62,17 @@ namespace version {
 					break;
 				}
 				if (pre_release_number) {
-					std::format_to(out, ".{}", pre_release_number.value());
+					detail::format_to(out, ".{}", pre_release_number.value());
 				}
 			}
 			if (build) {
-				std::format_to(out, "+{}", build.value());
+				detail::format_to(out, "+{}", build.value());
 			}
 		}
 
 		[[nodiscard]] auto to_string() const noexcept {
 			std::string out;
-			format_to(std::back_inserter(out));
+			(*this).format_to(std::back_inserter(out));
 			return out;
 		}
 
@@ -78,10 +92,23 @@ namespace version {
 		#endif
 
 	};
+
+	constexpr version cpp_version{
+		[]() -> version {
+			if constexpr (__cplusplus == 1) return { 0, 0, 0, pre_release::alpha };
+			else if constexpr (__cplusplus <= 199711L) return { 0, 0, 0, pre_release::beta };
+			else if constexpr (__cplusplus <= 201103L) return { 11, 0, 0 };
+			else if constexpr (__cplusplus <= 201402L) return { 14, 0, 0 };
+			else if constexpr (__cplusplus <= 201703L) return { 17, 0, 0 };
+			else if constexpr (__cplusplus <= 202002L) return { 20, 0, 0 };
+			else return { 23, 0, 0 };
+		}()
+	};
+	version yasvl_version{ 1, 1, 0 };
 }
 
 namespace std {
-	template<> struct formatter<version::version> {
+	template<> struct formatter<yasvl::version> {
 		constexpr auto parse(std::format_parse_context& ctx) {			
 			// we might want to parse like &ma&bu
 		}
@@ -89,3 +116,25 @@ namespace std {
 		//constexpr auto format(const version::version& value, std::format_context& ctx) { value.format_to(ctx.out()); }
 	};
 }
+
+// This software is distributed under the MIT License
+//
+// Copyright(c) 2021 Ollivier Roberge
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this softwareand associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright noticeand this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.

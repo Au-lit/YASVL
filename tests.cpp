@@ -1,8 +1,16 @@
-#include "version.hpp"
+#include "yasvl.hpp"
 #include <iostream>
 int main() {
-	version::version ver{ 1, 0 };
+	yasvl::version ver{ 1, 0 };
 	std::cout << ver << '\n';
-	std::cout << version::compiler_version << '\n';
-	std::cout << std::boolalpha << (ver < version::compiler_version);
+	std::cout << yasvl::compiler_version << '\n';
+	std::cout << std::boolalpha << (ver < yasvl::compiler_version);
+	ver.major;
+	ver.minor;
+	ver.patch;
+	ver.pre_release_type;
+	ver.pre_release_number;
+	ver.build;
+	ver.to_string();
+	ver.format_to(OutputIterator);
 }
