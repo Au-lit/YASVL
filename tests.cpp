@@ -12,5 +12,5 @@ int main() {
 	ver.pre_release_number;
 	ver.build;
 	ver.to_string();
-	ver.format_to(OutputIterator);
+	//ver.format_to(OutputIterator);
 }
