@@ -1,6 +1,6 @@
 # Yet another [semantic versioning](https://semver.org/) library (YASVL)
 
-Yasvl is a C++20 library to handle versions:
+Yasvl is a single header C++20 library to handle versions:
 ```cpp
 #include "yasvl.hpp"
 
