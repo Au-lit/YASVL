@@ -15,7 +15,7 @@
 	#include "fmt/format.h"
 	#define YASVL_FMT fmt
 #else
-	#error "To use yasvl you need either \"fmt / format.h\" or <format> stdlib support."
+	#error To use yasvl you need either "fmt/format.h" or C++20 <format> stdlib support.
 #endif
 
 namespace yasvl {
@@ -31,30 +31,73 @@ namespace yasvl {
 		std::optional<std::uint_fast16_t> build = std::nullopt;
 		constexpr auto operator<=>(const version&) const noexcept = default;
 		constexpr bool operator==(const version&) const noexcept = default;
-		[[deprecated("Not yet implemented")]]
-		constexpr static version from_string(const std::string_view& str) noexcept {
-			version retVal;
-			std::string_view::size_type idx = [&]{
-				if (decltype(auto) ch = str.front(); ch == 'v' || ch == 'V') return 1;
-				else return 0;
-			}();
-			return {};
+		// not constexpr because of from_chars...
+		[[deprecated("Use at your own risk; still not working properly...")]]
+		static version from_string(const std::string_view& str) {
+			auto begin = str.data();
+			auto strEndPtr = begin + str.size();
+
+			version retval;
+			auto [ptr, ec] = std::from_chars(str.data() + (*begin == 'v' || *begin == 'V'), strEndPtr, retval.major);
+			if (ec != std::errc()) throw std::invalid_argument("yasvl::version::from_string: The string passed to the function is an invalid version");
+			if (ptr + 1 != strEndPtr) {
+				if (*ptr == '.') {
+					if (auto [ptr2, ec2] = std::from_chars(++ptr, strEndPtr, retval.minor);
+						ec2 == std::errc()) {
+						std::advance(ptr, ptr2 - ptr);
+						if (ptr + 1 != strEndPtr && *ptr == '.') {
+							std::advance(ptr, std::from_chars(++ptr, strEndPtr, retval.patch).ptr - ptr);
+						}
+					}
+				}
+				for (;;) {
+					if (auto ch = *ptr;
+						ch == '-') {
+						if (const auto pos1 = str.find_first_of("-alpha");
+							pos1 != std::string_view::npos) {
+							retval.pre_release_type = pre_release::alpha;
+							ptr = str.data() + pos1;
+						}
+						else if (const auto pos2 = str.find_first_of("-beta");
+							pos2 != std::string_view::npos) {
+							retval.pre_release_type = pre_release::beta;
+							ptr = str.data() + pos2;
+						}
+						else if (const auto pos3 = str.find_first_of("-rc");
+							pos3 != std::string_view::npos) {
+							retval.pre_release_type = pre_release::rc;
+							ptr = str.data() + pos3;
+						}
+						else return retval;
+					}
+					else if (ch == '+') {
+						if (decltype(retval.build)::value_type tmp;
+							std::from_chars(ptr, strEndPtr, tmp).ec == std::errc()) {
+							retval.build = tmp;
+						}
+						break;
+					}
+					else break;
+				}
+			}
+			return retval;
 		}
+
 		constexpr void format_to(std::output_iterator<const char&> auto out) const noexcept {
 			YASVL_FMT ::format_to(out, "v{}.{}.{}", major, minor, patch);
 			if (pre_release_type != pre_release::none) {
 				switch (pre_release_type) {
 				case pre_release::alpha:
 					for (const auto& ch : "-alpha")
-						out++ = ch;
+						*out++ = ch;
 					break;
 				case pre_release::beta:
 					for (const auto& ch : "-beta")
-						out++ = ch;
+						*out++ = ch;
 					break;
 				case pre_release::rc:
 					for (const auto& ch : "-rc")
-						out++ = ch;
+						*out++ = ch;
 					break;
 				case pre_release::none: 
 					[[fallthrough]];
@@ -80,14 +123,17 @@ namespace yasvl {
 			ver.format_to(std::ostream_iterator<char>(out));
 			return out;
 		}
+
 	private:
 		template<typename T1, typename T2>
-		friend std::partial_ordering operator<=>(const std::optional<T1>& opt1, const std::optional<T2>& opt2) {
+		constexpr friend std::partial_ordering operator<=>(const std::optional<T1>& opt1, const std::optional<T2>& opt2) {
 			if (!opt1 && !opt2) return std::partial_ordering::unordered;
 			if (!opt1) return std::partial_ordering::less;
 			if (!opt2) return std::partial_ordering::greater;
 			return opt1.value() <=> opt2.value();
 		}
+
+		enum class parseState : std::uint_fast8_t { nums, prerel, build, end };
 	};
 
 	constexpr version compiler_version{ 
@@ -112,7 +158,7 @@ namespace yasvl {
 			else return { 23 };
 		}()
 	};
-	version yasvl_version{ 1, 1, 0 };
+	version yasvl_version{ 1, 2, 0, pre_release::alpha };
 }
 
 
