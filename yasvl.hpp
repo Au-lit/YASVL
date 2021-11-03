@@ -27,10 +27,9 @@ namespace yasvl {
 		std::uint_fast8_t minor = 0;
 		std::uint_fast8_t patch = 0;
 		pre_release pre_release_type = pre_release::none;
-		std::optional<std::uint_fast8_t> pre_release_number = std::nullopt;
-		std::optional<std::uint_fast16_t> build = std::nullopt;
 		constexpr auto operator<=>(const version&) const noexcept = default;
 		constexpr bool operator==(const version&) const noexcept = default;
+		[[nodiscard]] constexpr bool is_pre_release() const noexcept { return pre_release_type != pre_release::none; }
 		// not constexpr because of from_chars...
 		[[deprecated("Use at your own risk; still not working properly...")]]
 		static version from_string(const std::string_view& str) {
@@ -158,20 +157,15 @@ namespace yasvl {
 			else return { 23 };
 		}()
 	};
-	version yasvl_version{ 1, 2, 0, pre_release::alpha };
+	version yasvl_version{ 2, 0, 0, pre_release::alpha };
 }
 
-
-
-namespace YASVL_FMT {
-	template<> struct YASVL_FMT ::formatter<yasvl::version> {
-		constexpr auto parse(YASVL_FMT ::format_parse_context& ctx) {
-			// we might want to parse like &ma&bu
-		}
-
-		//constexpr auto format(const yasvl::version& value, YASVL_FMT ::format_context& ctx) { value.format_to(ctx.out()); }
-	};
-}
+template<> struct YASVL_FMT ::formatter<yasvl::version> {
+	constexpr auto parse(YASVL_FMT ::format_parse_context& ctx) {
+		// we might want to parse like &ma&bu
+	}
+	//constexpr auto format(const yasvl::version& value, YASVL_FMT ::format_context& ctx) { value.format_to(ctx.out()); }
+};
 
 #undef YASVL_FMT
 
